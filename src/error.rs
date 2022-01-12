@@ -8,4 +8,6 @@ pub enum KHLError {
     ReqwestError(#[from] reqwest::Error),
     #[error("serde_json error:{0}")]
     SerdeJsonError(#[from] serde_json::Error),
+    #[error("KHL Api error:{0}")]
+    HttpApiCallError(String),
 }

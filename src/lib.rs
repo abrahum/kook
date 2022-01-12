@@ -9,6 +9,7 @@ pub mod prelude {
     pub use crate::error::*;
     pub use crate::event::*;
     pub use crate::structs::*;
+    pub use crate::config::Config;
 }
 
 use std::sync::{
