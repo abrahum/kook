@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 pub struct User {
     pub id: String,
     pub username: String,
-    pub nickname: String,
+    pub nickname: Option<String>,
     pub identify_num: String,
     pub online: bool,
     pub bot: bool,
     pub status: u8,
     pub avatar: String,
     pub vip_avatar: String,
-    pub mobile_verify: bool,
+    // pub mobile_verify: bool,
     pub roles: Vec<i32>,
 }
 
@@ -117,4 +117,10 @@ pub struct GuildShort {
     pub welcome_channel_id: String,
     // pub boost_num: i32, 
     // pub level: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Emoji {
+    pub id: String,
+    pub name: String,
 }

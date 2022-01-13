@@ -3,7 +3,7 @@ use serde::{de::Visitor, Deserialize, Serialize};
 
 #[derive(Debug, Clone)]
 pub enum Signal {
-    Event(Event, i32),
+    Event(Event<EventExtra>, i32),
     Hello(HelloContent),
     Ping(i32),
     Pong,
@@ -42,6 +42,7 @@ enum SinalField {
     S,
     D,
     Sn,
+    Extra,
 }
 
 struct SignalVistor;
@@ -62,7 +63,7 @@ impl<'de> Visitor<'de> for SignalVistor {
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum DItem {
-            Event(Event),
+            Event(Event<EventExtra>),
             Hello(HelloContent),
             Reconnect(ReconnectContent),
             ResumeAck(ResumeAckContent),
@@ -76,6 +77,9 @@ impl<'de> Visitor<'de> for SignalVistor {
                 SinalField::S => s = Some(map.next_value()?),
                 SinalField::D => d = Some(map.next_value()?),
                 SinalField::Sn => sn = Some(map.next_value()?),
+                _ => {
+                    let _ = map.next_value::<serde_json::Value>()?;
+                }
             }
         }
         match s.ok_or(DeError::missing_field("s"))? {
@@ -137,13 +141,7 @@ impl Serialize for Signal {
     {
         use serde::ser::SerializeMap;
         match self {
-            Signal::Event(event, sn) => {
-                let mut map = serializer.serialize_map(Some(3))?;
-                map.serialize_entry("s", &0)?;
-                map.serialize_entry("d", &event)?;
-                map.serialize_entry("sn", &sn)?;
-                map.end()
-            }
+            Signal::Event(..) => unimplemented!(),
             Signal::Hello(hello) => {
                 let mut map = serializer.serialize_map(Some(2))?;
                 map.serialize_entry("s", &1)?;
@@ -222,4 +220,36 @@ fn de_test() {
         let signal: Signal = serde_json::from_str(data).unwrap();
         println!("{:?}", signal);
     }
+}
+
+#[test]
+fn de_event_test() {
+    let s = r#"{
+        "s": 0,
+        "d": {
+          "channel_type": "PERSON",
+          "type": 255,
+          "target_id": "2862900000",
+          "author_id": "1",
+          "content": "[系统消息]",
+          "extra": {
+            "type": "updated_private_message",
+            "body": {
+              "author_id": "2862900000",
+              "target_id": "2862900000",
+              "msg_id": "93262503-xxxx-0d814f7b416a",
+              "content": "asdaaad",
+              "updated_at": 1612778254183,
+              "chat_code": "xxxxxxxxxxxxxxxxx"
+            }
+          },
+          "msg_id": "8cb11d28-xxxxx-5700aa4c1b58",
+          "msg_timestamp": 1612778254192,
+          "nonce": "",
+          "verify_token": "xxx"
+        },
+        "sn": 32
+      }"#;
+    let signal: Signal = serde_json::from_str(s).unwrap();
+    println!("{:?}", signal);
 }

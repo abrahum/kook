@@ -1,39 +1,80 @@
 use crate::prelude::*;
-use reqwest::{Client, Url};
+use hyper::{
+    body::{aggregate, Buf},
+    client::{Client, HttpConnector},
+    header::{AUTHORIZATION, CONTENT_TYPE},
+    Body, Request, Uri,
+};
+use hyper_tls::HttpsConnector;
 
 const V3_BASE_URL: &str = "https://www.kaiheila.cn/api/v3";
-pub(crate) type HttpClient = Client;
+pub(crate) type HttpsClient = Client<HttpsConnector<HttpConnector>>;
 
-impl crate::KHL<3> {
-    fn build_url(paths: Vec<&str>, query: &str) -> Url {
+impl<const V: u8> crate::KHL<V> {
+    pub(crate) fn new_https_clent() -> HttpsClient {
+        let https = HttpsConnector::new();
+        Client::builder().build::<_, Body>(https)
+    }
+
+    fn build_url(paths: Vec<&str>, query: &str) -> Uri {
         let mut url = format!("{}/{}", V3_BASE_URL, paths.join("/"));
         if !query.is_empty() {
             url.push_str("?");
             url.push_str(query);
         }
-        Url::parse(&url).unwrap()
+        url.parse().unwrap()
     }
 
-    async fn get<T>(&self, url: Url) -> KHLResult<T>
+    async fn _get(&self, url: Uri) -> KHLResult<impl Buf> {
+        self.limit.check_limit(url.path()).await;
+        let req = Request::get(url)
+            .header(AUTHORIZATION, &self.author)
+            .body(Body::empty())
+            .unwrap();
+        let res = self.http_client.request(req).await?;
+        self.limit.update_from_header(res.headers()).await;
+        aggregate(res).await.map_err(|e| e.into())
+    }
+
+    async fn _post(&self, url: Uri, body: String) -> KHLResult<impl Buf> {
+        self.limit.check_limit(url.path()).await;
+        let req = Request::post(url)
+            .header(AUTHORIZATION, &self.author)
+            .header(CONTENT_TYPE, "application/json")
+            .body(body.into())
+            .unwrap();
+        let res = self.http_client.request(req).await?;
+        self.limit.update_from_header(res.headers()).await;
+        aggregate(res).await.map_err(|e| e.into())
+    }
+
+    async fn get<T>(&self, url: Uri) -> KHLResult<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        let res = self.http_client.get(url).send().await?;
-        let body = res.text().await?;
-        println!("{}", body);
-        let data: HttpResp<T> = serde_json::from_str(&body)?;
+        let body = self._get(url).await?;
+        let data: HttpResp<EmptyAble<T>> = serde_json::from_reader(body.reader())?;
         data.as_result()
     }
 
-    async fn post<T>(&self, url: Url, data: String) -> KHLResult<T>
+    async fn post<T>(&self, url: Uri, body: String) -> KHLResult<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
-        println!("{}", data);
-        let res = self.http_client.post(url).body(data).send().await?;
-        let body = res.text().await?;
-        println!("{}", body);
-        let data: HttpResp<T> = serde_json::from_str(&body)?;
+        let body = self._post(url, body).await?;
+        let data: HttpResp<EmptyAble<T>> = serde_json::from_reader(body.reader())?;
+        data.as_result()
+    }
+
+    // async fn empty_get(&self, url: Uri) -> KHLResult<()> {
+    //     let body = self._get(url).await?;
+    //     let data: HttpResp<Empty> = serde_json::from_str(&body)?;
+    //     data.as_result()
+    // }
+
+    async fn empty_post(&self, url: Uri, body: String) -> KHLResult<()> {
+        let body = self._post(url, body).await?;
+        let data: HttpResp<Empty> = serde_json::from_reader(body.reader())?;
         data.as_result()
     }
 
@@ -93,33 +134,40 @@ impl crate::KHL<3> {
         guild_id: &str,
         user_id: Option<&str>,
         nickname: Option<&str>,
-    ) -> KHLResult<Empty> {
-        let mut query = QueryBuilder::new("guild_id", guild_id);
+    ) -> KHLResult<()> {
+        let mut query = Map::default();
         query
+            .push("guild_id", guild_id)
             .push_option("user_id", user_id)
             .push_option("nickname", nickname);
         let url = Self::build_url(vec!["guild", "nickname"], "");
-        self.post(url, query.build()).await
+        self.empty_post(url, query.build()).await
     }
 
-    pub async fn leave_guild(&self, guild_id: &str) -> KHLResult<Empty> {
+    pub async fn leave_guild(&self, guild_id: &str) -> KHLResult<()> {
         let url = Self::build_url(vec!["guild", "leave"], "");
-        self.post(url, QueryBuilder::new("guild_id", guild_id).build())
-            .await
+        let mut query = Map::default();
+        query.push("guild_id", guild_id);
+        self.empty_post(url, query.build()).await
     }
 
-    pub async fn kickout_guild(&self, guild_id: &str, target_id: &str) -> KHLResult<Empty> {
+    pub async fn kickout_guild(&self, guild_id: &str, target_id: &str) -> KHLResult<()> {
         let url = Self::build_url(vec!["guild", "kickout"], "");
-        let mut query = QueryBuilder::new("guild_id", guild_id);
-        query.push("target_id", target_id);
-        self.post(url, query.build()).await
+        let mut query = Map::default();
+        query
+            .push("guild_id", guild_id)
+            .push("target_id", target_id);
+        self.empty_post(url, query.build()).await
     }
 
-    pub async fn set_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KHLResult<Empty> {
+    pub async fn set_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KHLResult<()> {
         let url = Self::build_url(vec!["guild-mute", "create"], "");
-        let mut query = QueryBuilder::new("guild_id", guild_id);
-        query.push("user_id", user_id).push("type", ty);
-        self.post(url, query.build()).await
+        let mut query = Map::default();
+        query
+            .push("guild_id", guild_id)
+            .push("user_id", user_id)
+            .push("type", ty);
+        self.empty_post(url, query.build()).await
     }
 
     pub async fn send_direct_message(
@@ -131,7 +179,7 @@ impl crate::KHL<3> {
         quote: Option<&str>,
         nonce: Option<&str>,
     ) -> KHLResult<MessageResp> {
-        let mut query = QueryBuilder::default();
+        let mut query = Map::default();
         query
             .push_option("type", ty)
             .push_option("target_id", target_id)
@@ -199,6 +247,72 @@ impl QueryBuilder {
 }
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum MapValue {
+    Int(i32),
+    String(String),
+}
+
+impl From<u8> for MapValue {
+    fn from(value: u8) -> Self {
+        MapValue::Int(value as i32)
+    }
+}
+
+impl From<i32> for MapValue {
+    fn from(value: i32) -> Self {
+        MapValue::Int(value)
+    }
+}
+
+impl From<&str> for MapValue {
+    fn from(value: &str) -> Self {
+        MapValue::String(value.to_string())
+    }
+}
+
+impl From<String> for MapValue {
+    fn from(value: String) -> Self {
+        MapValue::String(value)
+    }
+}
+
+type Map = HashMap<String, MapValue>;
+
+trait MapExt {
+    fn push<T>(&mut self, key: &str, value: T) -> &mut Self
+    where
+        T: Into<MapValue>;
+    fn push_option<T>(&mut self, key: &str, value: Option<T>) -> &mut Self
+    where
+        T: Into<MapValue>;
+    fn build(&self) -> String;
+}
+
+impl MapExt for Map {
+    fn push<T>(&mut self, key: &str, value: T) -> &mut Self
+    where
+        T: Into<MapValue>,
+    {
+        self.insert(key.to_string(), value.into());
+        self
+    }
+    fn push_option<T>(&mut self, key: &str, value: Option<T>) -> &mut Self
+    where
+        T: Into<MapValue>,
+    {
+        if let Some(value) = value {
+            self.insert(key.to_string(), value.into());
+        }
+        self
+    }
+    fn build(&self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HttpResp<T> {
@@ -207,10 +321,30 @@ pub struct HttpResp<T> {
     pub data: T,
 }
 
-impl<T> HttpResp<T> {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum EmptyAble<T> {
+    Data(T),
+    Empty {},
+}
+
+impl<T> HttpResp<EmptyAble<T>> {
     pub fn as_result(self) -> KHLResult<T> {
         if self.code == 0 {
-            Ok(self.data)
+            match self.data {
+                EmptyAble::Empty {} => Err(KHLError::HttpApiCallEmptyResponse),
+                EmptyAble::Data(data) => Ok(data),
+            }
+        } else {
+            Err(KHLError::HttpApiCallError(self.message))
+        }
+    }
+}
+
+impl HttpResp<Empty> {
+    pub fn as_result(self) -> KHLResult<()> {
+        if self.code == 0 {
+            Ok(())
         } else {
             Err(KHLError::HttpApiCallError(self.message))
         }
@@ -250,20 +384,20 @@ pub struct Gateway {
 #[tokio::test]
 async fn test() {
     let config = Config::load_from_file();
-    let khl = crate::KHL::new_from_config(config).arc();
-    // let list = khl.get_guild_list(None, None, None).await.unwrap();
-    // println!("{:?}", list);
+    let khl = crate::KHL::new_from_config(config, EchoHandler).arc();
+    let list = khl.get_guild_list(None, None, None).await.unwrap();
+    println!("{:?}", list);
     // let guild = khl.get_guild_view(&list.items[0].id).await.unwrap();
     // println!("{:?}", guild);
-    let msg = khl
-        .send_direct_message(
-            None,
-            Some("3575610837"),
-            None,
-            "Hello World".to_string(),
-            None,
-            None,
-        )
-        .await;
-    println!("{:?}", msg);
+    // let msg = khl
+    //     .send_direct_message(
+    //         None,
+    //         Some("3575610837"),
+    //         None,
+    //         "Hello World".to_string(),
+    //         None,
+    //         None,
+    //     )
+    //     .await;
+    // println!("{:?}", msg);
 }

@@ -2,8 +2,8 @@
 
 ## Comms:
 
-- [ ] http: wip
-- [ ] websocket: wip
+- [x] http
+- [x] websocket
 - [ ] webhook: 最低优先级
 
 ## Apis:

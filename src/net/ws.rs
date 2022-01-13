@@ -33,8 +33,12 @@ impl crate::KHL<3> {
                 if let Ok(sig) = serde_json::from_str::<Signal>(msg.to_string().as_str()) {
                     println!("{:?}", sig);
                     match sig {
-                        Signal::Event(_, sn) => {
+                        Signal::Event(event, sn) => {
                             self.sn.store(sn, Ordering::SeqCst);
+                            let khl = self.clone();
+                            tokio::spawn(async move {
+                                khl.handler._handle(&khl, event).await;
+                            });
                         }
                         Signal::Hello(hello) => {
                             *self.session_id.write().await = hello.session_id;
