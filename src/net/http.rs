@@ -83,7 +83,7 @@ impl<const V: u8> crate::KHL<V> {
         page: Option<i32>,
         page_size: Option<i32>,
         sort: Option<&str>,
-    ) -> KHLResult<GuildList> {
+    ) -> KHLResult<RespList<GuildShort>> {
         let mut query = QueryBuilder::default();
         query
             .push_option("page", page)
@@ -160,6 +160,17 @@ impl<const V: u8> crate::KHL<V> {
         self.empty_post(url, query.build()).await
     }
 
+    pub async fn get_guild_mute_list(
+        &self,
+        guild_id: &str,
+        return_type: Option<&str>,
+    ) -> KHLResult<GuildMuteList> {
+        let mut query = QueryBuilder::new("guild_id", guild_id);
+        query.push_option("return_type", return_type);
+        let url = Self::build_url(vec!["guild-mute", "list"], &query.build());
+        self.get(url).await
+    }
+
     pub async fn set_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KHLResult<()> {
         let url = Self::build_url(vec!["guild-mute", "create"], "");
         let mut query = Map::default();
@@ -170,12 +181,65 @@ impl<const V: u8> crate::KHL<V> {
         self.empty_post(url, query.build()).await
     }
 
+    pub async fn unset_guild_mute(&self, guild_id: &str, user_id: &str) -> KHLResult<()> {
+        let url = Self::build_url(vec!["guild-mute", "delete"], "");
+        let mut query = Map::default();
+        query.push("guild_id", guild_id).push("user_id", user_id);
+        self.empty_post(url, query.build()).await
+    }
+
+    pub async fn get_channel_list(
+        &self,
+        guild_id: &str,
+        page: Option<i32>,
+        page_size: Option<i32>,
+        ty: Option<i32>,
+    ) -> KHLResult<RespList<ChannelShort>> {
+        let mut query = QueryBuilder::new("guild_id", guild_id);
+        query
+            .push_option("page", page)
+            .push_option("page_size", page_size)
+            .push_option("type", ty);
+        let url = Self::build_url(vec!["channel", "list"], &query.build());
+        self.get(url).await
+    }
+
+    pub async fn get_channel_view(&self, channel_id: &str) -> KHLResult<Channel> {
+        //?
+        let url = Self::build_url(
+            vec!["channel", "view"],
+            &QueryBuilder::new("channel_id", channel_id).build(),
+        );
+        self.get(url).await
+    }
+
+    pub async fn send_channel_message(
+        &self,
+        target_id: &str,
+        content: &str,
+        ty: Option<u8>,
+        quote: Option<&str>,
+        nonce: Option<&str>,
+        temp_target_id: Option<&str>,
+    ) -> KHLResult<MessageResp> {
+        let url = Self::build_url(vec!["channel", "message"], "");
+        let mut query = Map::default();
+        query
+            .push("target_id", target_id)
+            .push("content", content)
+            .push_option("type", ty)
+            .push_option("quote", quote)
+            .push_option("nonce", nonce)
+            .push_option("temp_target_id", temp_target_id);
+        self.post(url, query.build()).await
+    }
+
     pub async fn send_direct_message(
         &self,
-        ty: Option<i32>,
         target_id: Option<&str>,
         chat_code: Option<&str>,
         content: String,
+        ty: Option<i32>,
         quote: Option<&str>,
         nonce: Option<&str>,
     ) -> KHLResult<MessageResp> {
@@ -351,13 +415,13 @@ impl HttpResp<Empty> {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GuildList {
-    pub items: Vec<GuildShort>,
+#[derive(Debug, Clone, Deserialize)]
+pub struct RespList<T> {
+    pub items: Vec<T>,
     pub meta: PageMeta,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct GuildUserList {
     pub items: Vec<User>,
     pub meta: PageMeta,
@@ -369,14 +433,27 @@ pub struct GuildUserList {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Empty {}
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct MessageResp {
     pub msg_id: String,
     pub msg_timestamp: i64,
     pub nonce: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
+pub struct GuildMuteList {
+    pub mic: GuildMuteItem,
+    pub headset: GuildMuteItem,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GuildMuteItem {
+    #[serde(rename = "type")]
+    pub ty: u8,
+    pub user_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
 pub struct Gateway {
     pub url: String,
 }

@@ -29,7 +29,7 @@ impl EventHandler for EchoHandler {
     async fn handle_message_event(&self, khl: &KHL<3>, event: Event<MessageExtra>) {
         let msg = event.content.clone();
         if msg.starts_with("echo") {
-            khl.send_direct_message(None,  Some(&event.author_id),None, msg, None, None)
+            khl.send_direct_message(None, Some(&event.author_id), msg, None, None, None)
                 .await
                 .unwrap();
         }

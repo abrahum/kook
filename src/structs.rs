@@ -115,8 +115,21 @@ pub struct GuildShort {
     pub open_id: String,
     pub default_channel_id: String,
     pub welcome_channel_id: String,
-    // pub boost_num: i32, 
+    // pub boost_num: i32,
     // pub level: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChannelShort {
+    pub id: String,
+    pub name: String,
+    pub master_id: String,
+    pub parent_id: String,
+    #[serde(rename = "type")]
+    pub ty: i32,
+    pub level: i32,
+    pub limit_amount: i32,
+    pub is_category: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -8,19 +8,26 @@
 
 ## Apis:
 
-- [ ] 服务器
-  - [x] 服务器列表
+- [x] Guild
+- [ ] Channel
+  - [x] Channel List
+  - [x] Send Channel Message
+  - [ ] ...
+- [ ] Person
+  - [x] Send Direct Message
   - [ ] ...
 - [ ] ...
 
 ## Events:
 
-- [ ] 频道
-  - [ ] 频道内用户添加
-  - [ ] ...
+- [x] 频道
 - [ ] 私聊
 - [ ] 服务器成员
 - [ ] 服务器角色
 - [ ] 服务器
-- [ ] 消息
+- [x] 消息
 - [ ] 用户
+
+## Cards:
+
+> **todo**
