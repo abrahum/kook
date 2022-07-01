@@ -12,7 +12,7 @@ pub enum Signal {
     ResumeAck(ResumeAckContent),
 }
 
-impl<const V: u8> crate::KHL<V> {
+impl crate::Kook {
     pub(crate) fn new_ping(&self) -> Signal {
         use std::sync::atomic::Ordering;
         Signal::Ping(self.sn.load(Ordering::SeqCst))

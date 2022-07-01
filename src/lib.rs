@@ -1,3 +1,5 @@
+mod api;
+mod card;
 mod config;
 mod error;
 mod event;
@@ -5,7 +7,8 @@ mod handler;
 mod net;
 mod signal;
 mod structs;
-mod card;
+
+pub const KOOK: &str = "KOOK";
 
 pub mod prelude {
     pub use crate::config::Config;
@@ -13,7 +16,8 @@ pub mod prelude {
     pub use crate::event::*;
     pub use crate::handler::*;
     pub use crate::structs::*;
-    pub use crate::KHL;
+    pub use crate::Kook;
+    pub use crate::KOOK;
 }
 
 use handler::EventHandler;
@@ -23,7 +27,7 @@ use std::sync::{
 };
 use tokio::sync::RwLock;
 
-pub struct KHL<const V: u8> {
+pub struct Kook {
     pub author: String,
 
     session_id: RwLock<String>,
@@ -35,7 +39,7 @@ pub struct KHL<const V: u8> {
     handler: Arc<dyn EventHandler>,
 }
 
-impl KHL<3> {
+impl Kook {
     pub fn new_from_config<T>(config: config::Config, hanlder: T) -> Self
     where
         T: EventHandler + 'static,
@@ -57,12 +61,4 @@ impl KHL<3> {
     pub fn arc(self) -> Arc<Self> {
         Arc::new(self)
     }
-}
-
-#[tokio::test]
-async fn test() {
-    use crate::handler::EchoHandler;
-    let config = config::Config::load_from_file();
-    let khl = KHL::new_from_config(config, EchoHandler).arc();
-    khl.ws_connect().await.unwrap();
 }

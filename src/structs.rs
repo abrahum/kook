@@ -137,3 +137,42 @@ pub struct Emoji {
     pub id: String,
     pub name: String,
 }
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct RespList<T> {
+    pub items: Vec<T>,
+    pub meta: PageMeta,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GuildUserList {
+    pub items: Vec<User>,
+    pub meta: PageMeta,
+    pub user_count: i32,
+    pub online_count: i32,
+    pub offline_count: i32,
+}
+#[derive(Debug, Clone, Deserialize)]
+pub struct MessageResp {
+    pub msg_id: String,
+    pub msg_timestamp: i64,
+    pub nonce: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GuildMuteList {
+    pub mic: GuildMuteItem,
+    pub headset: GuildMuteItem,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GuildMuteItem {
+    #[serde(rename = "type")]
+    pub ty: u8,
+    pub user_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct Gateway {
+    pub url: String,
+}

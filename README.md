@@ -1,4 +1,6 @@
-# (WIP) 开黑啦 Rust lib
+# (WIP) Kook Rust lib
+
+**由于 Kook 现文档字段混乱，实际与文档存在众多不符之处，本 repo 暂时暂停开发**
 
 ## Comms:
 
