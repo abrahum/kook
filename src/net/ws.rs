@@ -19,8 +19,7 @@ impl crate::Kook {
                 loop {
                     tokio::time::sleep(Duration::from_secs(24)).await;
                     khl.pong.store(false, Ordering::SeqCst);
-                    let ping = khl.new_ping();
-                    println!("ping: {:?}", ping);
+                    trace!(target: KOOK, "sending ping");
                     stx.send(serde_json::to_string(&khl.new_ping()).unwrap().into())
                         .await
                         .unwrap();
@@ -34,32 +33,42 @@ impl crate::Kook {
                 match msg {
                     WsMsg::Text(t) => {
                         trace!(target: KOOK, "received WsText: {}", t);
-                        if let Ok(sig) = serde_json::from_str::<Signal>(&t) {
-                            trace!(target: KOOK, "received signal: {:?}", sig);
-                            match sig {
-                                Signal::Event(event, sn) => {
-                                    self.sn.store(sn, Ordering::SeqCst);
-                                    let khl = self.clone();
-                                    tokio::spawn(async move {
-                                        khl.handler._handle(&khl, event).await;
-                                    });
-                                }
-                                Signal::Hello(hello) => {
-                                    *self.session_id.write().await = hello.session_id;
-                                }
-                                Signal::Ping(_) => unreachable!(),
-                                Signal::Pong => self.pong.store(true, Ordering::SeqCst),
-                                Signal::Resume(_) => unreachable!(),
-                                Signal::Reconnect(_content) => todo!(),
-                                Signal::ResumeAck(content) => {
-                                    *self.session_id.write().await = content.session_id;
+                        match serde_json::from_str::<Signal>(&t) {
+                            Ok(sig) => {
+                                trace!(target: KOOK, "received signal: {:?}", sig);
+                                match sig {
+                                    Signal::Event(event, sn) => {
+                                        self.sn.store(sn, Ordering::SeqCst);
+                                        let khl = self.clone();
+                                        if self.bot_block {
+                                            if event.author().map_or(false, |user| user.bot) {
+                                                trace!(target: KOOK, "blocked a bot event");
+                                                continue;
+                                            }
+                                        }
+                                        tokio::spawn(async move {
+                                            khl.handler._handle(&khl, event).await;
+                                        });
+                                    }
+                                    Signal::Hello(hello) => {
+                                        *self.session_id.write().await = hello.session_id;
+                                    }
+                                    Signal::Ping(_) => unreachable!(),
+                                    Signal::Pong => self.pong.store(true, Ordering::SeqCst),
+                                    Signal::Resume(_) => unreachable!(),
+                                    Signal::Reconnect(_content) => todo!(),
+                                    Signal::ResumeAck(content) => {
+                                        *self.session_id.write().await = content.session_id;
+                                    }
                                 }
                             }
-                        } else {
-                            warn!(target: KOOK, "parse signal failed {:?}", t);
+                            Err(e) => {
+                                warn!(target: KOOK, "parse signal failed {:?}", t);
+                                warn!(target: KOOK, "parse error: {}", e);
+                            }
                         }
                     }
-                    WsMsg::Binary(b) => {
+                    WsMsg::Binary(_b) => {
                         unimplemented!()
                     }
                     WsMsg::Close(_) => break,

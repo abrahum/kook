@@ -5,8 +5,12 @@ mod error;
 mod event;
 mod handler;
 mod net;
+mod objects;
 mod signal;
 mod structs;
+
+#[cfg(test)]
+mod test;
 
 pub const KOOK: &str = "KOOK";
 
@@ -15,6 +19,7 @@ pub mod prelude {
     pub use crate::error::*;
     pub use crate::event::*;
     pub use crate::handler::*;
+    pub use crate::objects::*;
     pub use crate::structs::*;
     pub use crate::Kook;
     pub use crate::KOOK;
@@ -29,6 +34,8 @@ use tokio::sync::RwLock;
 
 pub struct Kook {
     pub author: String,
+    pub bot_block: bool,
+    pub self_id: RwLock<String>,
 
     session_id: RwLock<String>,
     sn: AtomicI32,
@@ -40,20 +47,22 @@ pub struct Kook {
 }
 
 impl Kook {
-    pub fn new_from_config<T>(config: config::Config, hanlder: T) -> Self
+    pub fn new_from_config<T>(config: config::Config, bot_block: bool, hanlder: T) -> Self
     where
         T: EventHandler + 'static,
     {
         let author = format!("Bot {}", config.bot_token);
         Self {
             author,
+            bot_block,
+            self_id: RwLock::default(),
 
             session_id: RwLock::default(),
             sn: AtomicI32::default(),
             pong: AtomicBool::default(),
             limit: net::limit::GlobalRateLimit::default(),
 
-            http_client: Self::new_https_clent(),
+            http_client: Self::new_https_client(),
             handler: Arc::new(hanlder),
         }
     }

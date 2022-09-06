@@ -16,6 +16,7 @@ tokio-tungstenite = { version = "0.16", features = ["native-tls"] }
 thiserror = "1"
 futures-util = { version = "0.3", features = ["sink"] }
 async-trait = "0.1"
+dashmap = "5.4"
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

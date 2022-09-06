@@ -36,18 +36,28 @@ impl Event<EventExtra> {
             Err(_) => None,
         }
     }
+
+    pub fn author(&self) -> Option<&User> {
+        match &self.extra {
+            EventExtra::GroupMessage(g) => Some(&g.author),
+            EventExtra::PersonMessage(p) => Some(&p.author),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(untagged)]
 pub enum EventExtra {
     System(SystemExtra),
-    Message(MessageExtra),
+    GroupMessage(GroupMessageExtra),
+    PersonMessage(PersonMessageExtra),
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(tag = "type", content = "body", rename_all = "snake_case")]
 pub enum SystemExtra {
+    // Channel
     AddedReaction {
         channel_id: String,
         emoji: Emoji,
@@ -90,13 +100,124 @@ pub enum SystemExtra {
         operator_id: String,
         msg_id: String,
     },
+    // private
     UpdatedPrivateMessage {
+        msg_id: String,
         author_id: String,
         target_id: String,
-        msg_id: String,
         content: String,
-        updated_at: i64,
         chat_code: String,
+        updated_at: i64,
+    },
+    DeletedPrivateMessage {
+        msg_id: String,
+        author_id: String,
+        target_id: String,
+        chat_code: String,
+        deleted_at: i64,
+    },
+    PrivateAddedReaction {
+        msg_id: String,
+        user_id: String,
+        chat_code: String,
+        emoji: Emoji,
+    },
+    PrivateDeletedReaction {
+        msg_id: String,
+        user_id: String,
+        chat_code: String,
+        emoji: Emoji,
+    },
+    // guild member
+    JoinedGuild {
+        user_id: String,
+        joined_at: i64,
+    },
+    ExitedGuild {
+        user_id: String,
+        exited_at: i64,
+    },
+    UpdateGuildMember {
+        user_id: String,
+        nickname: String,
+    },
+    GuildMemberOnline {
+        user_id: String,
+        event_time: i64,
+        guilds: Vec<String>,
+    },
+    GuildMemberOffline {
+        user_id: String,
+        event_time: i64,
+        guilds: Vec<String>,
+    },
+    // role
+    AddedRole(Role),
+    DeletedRole(Role),
+    UpdatedRole(Role),
+    // guild
+    UpdateGuild {
+        // bad
+        id: String,
+        name: String,
+        user_id: String,
+        icon: String,
+        notify_type: i64,
+        region: String,
+        enable_open: i64,
+        open_id: i64,
+        default_channel_id: String,
+        welcome_channel_id: String,
+    },
+    DeletedGuild {
+        id: String,
+        name: String,
+        user_id: String,
+        icon: String,
+        notify_type: i64,
+        region: String,
+        enable_open: i64,
+        open_id: i64,
+        default_channel_id: String,
+        welcome_channel_id: String,
+    },
+    AddedBlockList {
+        operator_id: String,
+        remark: String,
+        user_id: String,
+    },
+    DeletedBlockList {
+        operator_id: String,
+        user_id: String,
+    },
+    // user
+    JoinedChannel {
+        user_id: String,
+        channel_id: String,
+        joined_at: i64,
+    },
+    ExitedChannel {
+        user_id: String,
+        channel_id: String,
+        exited_at: String,
+    },
+    UserUpdated {
+        user_id: String,
+        username: String,
+        avatar: String,
+    },
+    SelfJoinedGuild {
+        guild_id: String,
+    },
+    SelfExitedGuild {
+        guild_id: String,
+    },
+    MessageBtnClick {
+        msg_id: String,
+        user_id: String,
+        value: String,
+        target_id: String,
+        user_info: User,
     },
 }
 
@@ -112,11 +233,11 @@ impl TryFrom<EventExtra> for SystemExtra {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct MessageExtra {
+pub struct GroupMessageExtra {
     #[serde(rename = "type")]
     pub ty: i32,
-    pub guild_id: Option<String>,
-    pub channel_name: Option<String>,
+    pub guild_id: String,
+    pub channel_name: String,
     pub mention: Vec<String>,
     pub mention_all: bool,
     pub mention_roles: Vec<i32>,
@@ -124,12 +245,34 @@ pub struct MessageExtra {
     pub author: User,
 }
 
-impl TryFrom<EventExtra> for MessageExtra {
+impl TryFrom<EventExtra> for GroupMessageExtra {
     type Error = ();
 
     fn try_from(value: EventExtra) -> Result<Self, Self::Error> {
         match value {
-            EventExtra::Message(value) => Ok(value),
+            EventExtra::GroupMessage(value) => Ok(value),
+            _ => Err(()),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct PersonMessageExtra {
+    #[serde(rename = "type")]
+    pub ty: i32,
+    pub author: User,
+    pub mention: Vec<String>,
+    pub mention_all: bool,
+    pub mention_roles: Vec<i32>,
+    pub mention_here: bool,
+}
+
+impl TryFrom<EventExtra> for PersonMessageExtra {
+    type Error = ();
+
+    fn try_from(value: EventExtra) -> Result<Self, Self::Error> {
+        match value {
+            EventExtra::PersonMessage(value) => Ok(value),
             _ => Err(()),
         }
     }
