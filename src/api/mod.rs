@@ -148,7 +148,7 @@ const MESSAGE: &str = "message";
 impl Kook {
     pub async fn create_message(
         &self,
-        ty: Option<i32>,
+        ty: Option<u8>,
         target_id: &str,
         content: &str,
         quote: Option<&str>,
@@ -191,7 +191,7 @@ impl crate::Kook {
         target_id: Option<&str>,
         chat_code: Option<&str>,
         content: &str,
-        ty: Option<i32>,
+        ty: Option<u8>,
         quote: Option<&str>,
         nonce: Option<&str>,
     ) -> KookResult<MessageResp> {

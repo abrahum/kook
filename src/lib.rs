@@ -68,3 +68,30 @@ impl Kook {
         Arc::new(self)
     }
 }
+
+#[derive(Debug, Clone)]
+pub enum MessageType {
+    Text,
+    Image,
+    Video,
+    File,
+    Audio,
+    KMarkdown,
+    Card,
+    System,
+}
+
+impl From<MessageType> for u8 {
+    fn from(ty: MessageType) -> Self {
+        match ty {
+            MessageType::Text => 1,
+            MessageType::Image => 2,
+            MessageType::Video => 3,
+            MessageType::File => 4,
+            MessageType::Audio => 8,
+            MessageType::KMarkdown => 9,
+            MessageType::Card => 10,
+            MessageType::System => 255,
+        }
+    }
+}
