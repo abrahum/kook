@@ -1,16 +1,16 @@
-use crate::error::KHLResult;
+use crate::error::KookResult;
 use crate::net::http::QueryBuilder;
 use crate::{objects::*, structs::*, Kook};
 
 macro_rules! http_api {
     ($fn_name: ident -> $rty: ty, $method: ident, $url: expr) => {
-        pub async fn $fn_name(&self) -> KHLResult<$rty> {
+        pub async fn $fn_name(&self) -> KookResult<$rty> {
             let query = QueryBuilder::default();
             self.$method($url, query).await
         }
     };
     ($fn_name: ident -> $rty: ty, $method: ident, $url: expr, $($key: ident: $kty: ty),*) => {
-        pub async fn $fn_name(&self, $($key: $kty),*) -> KHLResult<$rty> {
+        pub async fn $fn_name(&self, $($key: $kty),*) -> KookResult<$rty> {
             let mut query = QueryBuilder::default();
             $(
                 query.push(stringify!($key), $key);
@@ -55,20 +55,20 @@ impl crate::Kook {
 const GUILD_MUTE: &str = "guild_mute";
 
 impl Kook {
-    pub async fn get_guild_mute_list(&self, guild_id: &str) -> KHLResult<MuteList> {
+    pub async fn get_guild_mute_list(&self, guild_id: &str) -> KookResult<MuteList> {
         let mut query = QueryBuilder::default();
         query.push("guild_id", guild_id);
         query.push("return_type", "detail");
         self.get(vec![GUILD_MUTE, "list"], query).await
     }
-    pub async fn create_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KHLResult<()> {
+    pub async fn create_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KookResult<()> {
         let mut query = QueryBuilder::default();
         query.push("guild_id", guild_id);
         query.push("user_id", user_id);
         query.push("type", ty);
         self.empty_post(vec![GUILD_MUTE, "create"], query).await
     }
-    pub async fn delete_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KHLResult<()> {
+    pub async fn delete_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KookResult<()> {
         let mut query = QueryBuilder::default();
         query.push("guild_id", guild_id);
         query.push("user_id", user_id);
@@ -86,7 +86,7 @@ impl Kook {
         page_size: Option<i64>,
         guild_id: &str,
         ty: Option<u8>,
-    ) -> KHLResult<RespList<ChannelShort>> {
+    ) -> KookResult<RespList<ChannelShort>> {
         let mut query = QueryBuilder::default();
         query.push("page", page);
         query.push("page_size", page_size);
@@ -106,7 +106,7 @@ impl Kook {
         limit_amount: Option<i64>,
         voice_quality: Option<&str>,
         is_category: Option<i64>,
-    ) -> KHLResult<RespList<ChannelShort>> {
+    ) -> KookResult<RespList<ChannelShort>> {
         let mut query = QueryBuilder::default();
         query.push("guild_id", guild_id);
         query.push("parent_id", parent_id);
@@ -154,7 +154,7 @@ impl Kook {
         quote: Option<&str>,
         nonce: Option<&str>,
         temp_target_id: Option<&str>,
-    ) -> KHLResult<MessageResp> {
+    ) -> KookResult<MessageResp> {
         let mut query = QueryBuilder::default();
         query.push("target_id", target_id);
         query.push("content", content);
@@ -194,7 +194,7 @@ impl crate::Kook {
         ty: Option<i32>,
         quote: Option<&str>,
         nonce: Option<&str>,
-    ) -> KHLResult<MessageResp> {
+    ) -> KookResult<MessageResp> {
         let mut query = QueryBuilder::default();
         query.push("target_id", target_id);
         query.push("chat_code", chat_code);

@@ -1,6 +1,39 @@
-// todo need rebuild
-
 use serde::{Deserialize, Serialize};
+
+use crate::prelude::KookError;
+
+pub fn cards_decode(s: &str) -> Result<Cards, KookError> {
+    serde_json::from_str(s).map_err(|e| KookError::SerdeJsonError(e))
+}
+
+pub fn cards_encode(cards: &Cards) -> String {
+    serde_json::to_string(cards).unwrap()
+}
+
+pub type Cards = Vec<Card>;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum Theme {
+    #[default]
+    Primary,
+    Success,
+    Danger,
+    Warning,
+    Info,
+    Secondary,
+    None,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum Size {
+    Xs,
+    Sm,
+    Md,
+    #[default]
+    Lg,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case")]
@@ -20,20 +53,27 @@ pub enum CardModule {
         text: CardItem,
     },
     Section {
+        // plain-text|kmarkdown|paragraph
         text: CardItem,
+        // image|button
         accessory: CardItem,
+        // left|right
         mode: String,
     },
     ImageGroup {
+        // image
         elements: Vec<CardItem>,
     },
     Container {
+        // image
         elements: Vec<CardItem>,
     },
     ActionGroup {
+        // botton
         elements: Vec<CardItem>,
     },
     Context {
+        // plain-text|kmarkdown|image
         elements: Vec<CardItem>,
     },
     Divider,
@@ -57,6 +97,7 @@ pub enum CardModule {
         end_time: u64,
         #[serde(rename = "startTime")]
         start_time: u64,
+        // day,hour,second
         mode: String,
     },
     Invite {
@@ -77,13 +118,18 @@ pub enum CardItem {
     Image {
         src: String,
         alt: String,
-        size: String,
+        size: Size,
         circle: bool,
     },
     Bottom {
-        theme: String,
+        theme: Theme,
         value: String,
         click: String,
         text: String,
+    },
+    Paragraph {
+        col: u8,
+        // only PlainText or Kmarkdown
+        fields: Vec<CardItem>,
     },
 }

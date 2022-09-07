@@ -12,7 +12,7 @@ use tokio_tungstenite::{
 use tracing::{trace, warn, debug};
 
 impl crate::Kook {
-    pub async fn start_ws(self: &Arc<Self>) -> KHLResult<()> {
+    pub async fn start_ws(self: &Arc<Self>) -> KookResult<()> {
         let gateway = self.get_gateway(false).await?;
         if let Ok((mut ws_stream, _)) = connect_async(gateway.url).await {
             let mut count = 0;

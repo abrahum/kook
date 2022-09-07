@@ -1,5 +1,5 @@
 mod api;
-mod card;
+pub mod card;
 mod config;
 mod error;
 mod event;
@@ -8,7 +8,6 @@ mod net;
 mod objects;
 mod signal;
 mod structs;
-
 #[cfg(test)]
 mod test;
 

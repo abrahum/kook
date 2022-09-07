@@ -1,9 +1,9 @@
 use thiserror::Error;
 
-pub type KHLResult<T> = Result<T, KHLError>;
+pub type KookResult<T> = Result<T, KookError>;
 
 #[derive(Debug, Error)]
-pub enum KHLError {
+pub enum KookError {
     #[error("hyper error:{0}")]
     HyperError(#[from] hyper::Error),
     #[error("serde_json error:{0}")]

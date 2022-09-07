@@ -22,7 +22,7 @@ impl crate::Kook {
         Client::builder().build::<_, Body>(https)
     }
 
-    pub async fn get<T>(&self, url: Vec<&str>, query: QueryBuilder) -> KHLResult<T>
+    pub async fn get<T>(&self, url: Vec<&str>, query: QueryBuilder) -> KookResult<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
@@ -47,7 +47,7 @@ impl crate::Kook {
             use hyper::body::to_bytes;
             let bytes = to_bytes(res.into_body())
                 .await
-                .map_err(|e| KHLError::HyperError(e))?;
+                .map_err(|e| KookError::HyperError(e))?;
             let s = String::from_utf8(bytes.to_vec()).unwrap();
             trace!(target: crate::KOOK, "post resp: {:?}", s);
             let data: HttpResp<EmptyAble<T>> = serde_json::from_str(&s)?;
@@ -55,13 +55,13 @@ impl crate::Kook {
         }
         #[cfg(not(test))]
         {
-            let body = aggregate(res).await.map_err(|e| KHLError::HyperError(e))?;
+            let body = aggregate(res).await.map_err(|e| KookError::HyperError(e))?;
             let data: HttpResp<EmptyAble<T>> = serde_json::from_reader(body.reader())?;
             data.as_result()
         }
     }
 
-    pub async fn post<T>(&self, url: Vec<&str>, query: QueryBuilder) -> KHLResult<T>
+    pub async fn post<T>(&self, url: Vec<&str>, query: QueryBuilder) -> KookResult<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
@@ -82,7 +82,7 @@ impl crate::Kook {
             use hyper::body::to_bytes;
             let bytes = to_bytes(res.into_body())
                 .await
-                .map_err(|e| KHLError::HyperError(e))?;
+                .map_err(|e| KookError::HyperError(e))?;
             let s = String::from_utf8(bytes.to_vec()).unwrap();
             tracing::trace!(target: crate::KOOK, "get resp: {:?}", s);
             let data: HttpResp<EmptyAble<T>> = serde_json::from_str(&s)?;
@@ -96,7 +96,7 @@ impl crate::Kook {
         }
     }
 
-    pub async fn empty_post(&self, url: Vec<&str>, query: QueryBuilder) -> KHLResult<()> {
+    pub async fn empty_post(&self, url: Vec<&str>, query: QueryBuilder) -> KookResult<()> {
         self.post::<JsonValue>(url, query).await?;
         Ok(())
     }
@@ -148,14 +148,14 @@ pub enum EmptyAble<T> {
 }
 
 impl<T> HttpResp<EmptyAble<T>> {
-    pub fn as_result(self) -> KHLResult<T> {
+    pub fn as_result(self) -> KookResult<T> {
         if self.code == 0 {
             match self.data {
-                EmptyAble::Empty {} => Err(KHLError::HttpApiCallEmptyResponse),
+                EmptyAble::Empty {} => Err(KookError::HttpApiCallEmptyResponse),
                 EmptyAble::Data(data) => Ok(data),
             }
         } else {
-            Err(KHLError::HttpApiCallError(self.message))
+            Err(KookError::HttpApiCallError(self.message))
         }
     }
 }
