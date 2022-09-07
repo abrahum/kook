@@ -3,6 +3,12 @@ use crate::net::http::QueryBuilder;
 use crate::{objects::*, structs::*, Kook};
 
 macro_rules! http_api {
+    ($fn_name: ident -> $rty: ty, $method: ident, $url: expr) => {
+        pub async fn $fn_name(&self) -> KHLResult<$rty> {
+            let query = QueryBuilder::default();
+            self.$method($url, query).await
+        }
+    };
     ($fn_name: ident -> $rty: ty, $method: ident, $url: expr, $($key: ident: $kty: ty),*) => {
         pub async fn $fn_name(&self, $($key: $kty),*) -> KHLResult<$rty> {
             let mut query = QueryBuilder::default();
@@ -134,7 +140,7 @@ impl Kook {
     http_api!(get_channel_role -> ChannelRole,
         get, vec![CHANNEL_ROLE, "index"],
         channel_id: &str);
-    // pub async fn create_channel_role -> 
+    // pub async fn create_channel_role ->
 }
 
 const MESSAGE: &str = "message";
@@ -209,6 +215,12 @@ impl crate::Kook {
     // http_api!(get_direct_message_reaction_list) todo
     // http_api!(add_direct_message_reaction) todo
     // http_api!(delete_direct_message_reaction) todo
+}
+
+const USER: &str = "user";
+
+impl crate::Kook {
+    http_api!(get_me -> SelfUser, get, vec![USER, "me"]);
 }
 
 const GATEWAY: &str = "gateway";

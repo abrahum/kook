@@ -138,3 +138,19 @@ pub struct ChannelRole {
     pub permission_users: Vec<PermissionUser>,
     pub permission_sync: i64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SelfUser {
+    pub id: String,
+    pub username: String,
+    pub nickname: String,
+    pub identify_num: String,
+    pub online: bool,
+    pub bot: bool,
+    pub status: u8,
+    pub avatar: String,
+    pub mobile_verify: bool,
+    pub mobile_prefix: String,
+    pub mobile: String,
+    pub invited_count: i64,
+}
