@@ -36,14 +36,11 @@ pub enum Size {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "kebab-case")]
-pub enum Card {
-    Card {
-        theme: Option<String>,
-        color: Option<String>,
-        size: Option<String>,
-        modules: Vec<CardModule>,
-    },
+pub struct Card {
+    pub theme: Option<String>,
+    pub color: Option<String>,
+    pub size: Option<String>,
+    pub modules: Vec<CardModule>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
