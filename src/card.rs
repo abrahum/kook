@@ -53,9 +53,9 @@ pub enum CardModule {
         // plain-text|kmarkdown|paragraph
         text: CardItem,
         // image|button
-        accessory: CardItem,
+        accessory: Option<CardItem>,
         // left|right
-        mode: String,
+        mode: Option<String>,
     },
     ImageGroup {
         // image
