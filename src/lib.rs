@@ -35,7 +35,6 @@ use tokio::sync::RwLock;
 pub struct Kook {
     pub author: String,
     pub bot_block: bool,
-    pub self_id: RwLock<String>,
 
     session_id: RwLock<String>,
     sn: AtomicI32,
@@ -47,19 +46,18 @@ pub struct Kook {
 }
 
 impl Kook {
-    pub fn new_from_config<T>(config: config::Config, bot_block: bool, hanlder: T) -> Self
+    pub fn new_from_config<T>(config: config::Config, hanlder: T) -> Self
     where
         T: EventHandler + 'static,
     {
         let author = format!("Bot {}", config.bot_token);
         Self {
             author,
-            bot_block,
-            self_id: RwLock::default(),
+            bot_block: config.bot_block,
 
             session_id: RwLock::default(),
             sn: AtomicI32::default(),
-            pong: AtomicBool::default(),
+            pong: AtomicBool::from(true),
             limit: net::limit::GlobalRateLimit::default(),
 
             http_client: Self::new_https_client(),

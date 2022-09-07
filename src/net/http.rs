@@ -9,6 +9,8 @@ use hyper::{
     Body, Request, Uri,
 };
 use hyper_tls::HttpsConnector;
+use tracing::debug;
+#[cfg(test)]
 use tracing::trace;
 
 const V3_BASE_URL: &str = "https://www.kaiheila.cn/api/v3";
@@ -32,7 +34,7 @@ impl crate::Kook {
             url.push_str(&query);
         }
         let url: Uri = url.parse().unwrap();
-        trace!(target: KOOK, "Calling api GET {}", url);
+        debug!(target: KOOK, "Calling api GET {}", url);
         self.limit.check_limit(&bucket).await;
         let req = Request::get(url)
             .header(AUTHORIZATION, &self.author)
@@ -67,7 +69,7 @@ impl crate::Kook {
         let url: Uri = format!("{}/{}", V3_BASE_URL, bucket).parse().unwrap();
         self.limit.check_limit(&bucket).await;
         let data = query.json();
-        trace!(target: KOOK, "Calling api POST {} {}", bucket, data);
+        debug!(target: KOOK, "Calling api POST {} {}", bucket, data);
         let req = Request::post(url)
             .header(AUTHORIZATION, &self.author)
             .header(CONTENT_TYPE, "application/json")

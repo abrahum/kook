@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Config {
     pub bot_token: String,
+    pub bot_block: bool,
 }
 
 impl Config {

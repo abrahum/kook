@@ -16,7 +16,7 @@ fn init() -> Arc<Kook> {
         .init();
     let config = Config::load_from_file();
     println!("{:?}", config);
-    Kook::new_from_config(config, true, EchoHandler).arc()
+    Kook::new_from_config(config, EchoHandler).arc()
 }
 
 pub struct EchoHandler;
@@ -50,7 +50,7 @@ impl EventHandler for EchoHandler {
 #[tokio::test]
 async fn api_test() {
     let kook = init();
-    kook.ws_loop().await.unwrap();
+    kook.start_ws().await.unwrap();
 }
 
 #[test]
