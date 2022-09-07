@@ -26,3 +26,79 @@ pub trait EventHandler: Sync + Send {
     async fn handle_group_message_event(&self, _khl: &Kook, _event: Event<GroupMessageExtra>) {}
     async fn handle_person_message_event(&self, _khl: &Kook, _event: Event<PersonMessageExtra>) {}
 }
+
+impl EventHandler for tokio::sync::broadcast::Sender<Event<EventExtra>> {
+    fn _handle<'life0, 'life1, 'async_trait>(
+        &'life0 self,
+        _: &'life1 Kook,
+        event: Event<EventExtra>,
+    ) -> core::pin::Pin<
+        Box<dyn core::future::Future<Output = ()> + core::marker::Send + 'async_trait>,
+    >
+    where
+        'life0: 'async_trait,
+        'life1: 'async_trait,
+        Self: 'async_trait,
+    {
+        Box::pin(async move {
+            self.send(event).ok();
+        })
+    }
+}
+
+impl EventHandler for tokio::sync::mpsc::Sender<Event<EventExtra>> {
+    fn _handle<'life0, 'life1, 'async_trait>(
+        &'life0 self,
+        _: &'life1 Kook,
+        event: Event<EventExtra>,
+    ) -> core::pin::Pin<
+        Box<dyn core::future::Future<Output = ()> + core::marker::Send + 'async_trait>,
+    >
+    where
+        'life0: 'async_trait,
+        'life1: 'async_trait,
+        Self: 'async_trait,
+    {
+        Box::pin(async move {
+            self.send(event).await.ok();
+        })
+    }
+}
+
+impl EventHandler for tokio::sync::mpsc::UnboundedSender<Event<EventExtra>> {
+    fn _handle<'life0, 'life1, 'async_trait>(
+        &'life0 self,
+        _: &'life1 Kook,
+        event: Event<EventExtra>,
+    ) -> core::pin::Pin<
+        Box<dyn core::future::Future<Output = ()> + core::marker::Send + 'async_trait>,
+    >
+    where
+        'life0: 'async_trait,
+        'life1: 'async_trait,
+        Self: 'async_trait,
+    {
+        Box::pin(async move {
+            self.send(event).ok();
+        })
+    }
+}
+
+impl EventHandler for tokio::sync::watch::Sender<Event<EventExtra>> {
+    fn _handle<'life0, 'life1, 'async_trait>(
+        &'life0 self,
+        _: &'life1 Kook,
+        event: Event<EventExtra>,
+    ) -> core::pin::Pin<
+        Box<dyn core::future::Future<Output = ()> + core::marker::Send + 'async_trait>,
+    >
+    where
+        'life0: 'async_trait,
+        'life1: 'async_trait,
+        Self: 'async_trait,
+    {
+        Box::pin(async move {
+            self.send(event).ok();
+        })
+    }
+}
