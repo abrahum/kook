@@ -16,6 +16,8 @@ async fn main() {
         .init();
     let config = Config::load_from_file();
     let kook = Kook::new_from_config(config, EchoHandler).arc();
+    let me = kook.get_me().await.unwrap();
+    println!("{:?}", me);
     kook.start_ws().await.unwrap();
 }
 pub struct EchoHandler;

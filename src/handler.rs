@@ -102,3 +102,22 @@ impl EventHandler for tokio::sync::watch::Sender<Event<EventExtra>> {
         })
     }
 }
+
+#[cfg(test)]
+impl EventHandler for () {
+    fn _handle<'life0, 'life1, 'async_trait>(
+        &'life0 self,
+        _khl: &'life1 Kook,
+        event: Event<EventExtra>,
+    ) -> core::pin::Pin<
+        Box<dyn core::future::Future<Output = ()> + core::marker::Send + 'async_trait>,
+    >
+    where
+        'life0: 'async_trait,
+        'life1: 'async_trait,
+        Self: 'async_trait,
+    {
+        tracing::info!(target: crate::KOOK, "{:?}", event);
+        Box::pin(async move {})
+    }
+}

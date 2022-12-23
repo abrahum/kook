@@ -230,3 +230,10 @@ impl crate::Kook {
     get, vec![GATEWAY, "index"],
     compress: bool);
 }
+
+#[tokio::test]
+async fn user_me() {
+    let kook = crate::init();
+    let me = kook.get_me().await;
+    println!("{:?}", me);
+}

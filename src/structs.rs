@@ -149,8 +149,8 @@ pub struct SelfUser {
     pub bot: bool,
     pub status: u8,
     pub avatar: String,
-    pub mobile_verify: bool,
+    // pub mobile_verify: bool, bug!
     pub mobile_prefix: String,
     pub mobile: String,
-    pub invited_count: i64,
+    pub invited_count: String, //bug!
 }

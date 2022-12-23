@@ -95,3 +95,21 @@ impl From<MessageType> for u8 {
         }
     }
 }
+
+#[cfg(test)]
+pub fn init() -> Arc<Kook> {
+    use config::Config;
+    use tracing::metadata::LevelFilter;
+    use tracing_subscriber::prelude::*;
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer().with_filter(
+                tracing_subscriber::filter::targets::Targets::new()
+                    .with_default(LevelFilter::INFO)
+                    .with_targets([(KOOK, LevelFilter::TRACE)]),
+            ),
+        )
+        .init();
+    let config = Config::load_from_file();
+    Kook::new_from_config(config, ()).arc()
+}
