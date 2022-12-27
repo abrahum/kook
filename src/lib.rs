@@ -11,6 +11,9 @@ mod structs;
 #[cfg(test)]
 mod test;
 
+mod kmarkdown;
+pub use kmarkdown::{kmd_from_str, KMDItem};
+
 pub const KOOK: &str = "KOOK";
 
 pub mod prelude {
