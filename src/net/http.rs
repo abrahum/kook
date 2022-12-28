@@ -101,18 +101,33 @@ impl crate::Kook {
         Ok(())
     }
 
-    pub async fn create_asset(&self, asset: Vec<u8>) -> KookResult<AssetUrl> {
+    pub async fn create_asset(
+        &self,
+        asset: Vec<u8>,
+        content_type: &str,
+        file_name: &str,
+    ) -> KookResult<AssetUrl> {
         use reqwest::multipart::{Form, Part};
-        let form = Form::new().part("file", Part::bytes(asset));
+        let form = Form::new().part(
+            "file",
+            Part::bytes(asset)
+                .mime_str(content_type)?
+                .file_name(file_name.to_string()),
+        );
         let url = format!("{}/{}", V3_BASE_URL, "asset/create");
         self.limit.check_limit("asset/create").await;
         debug!(target: KOOK, "Calling api POST {}", "asset/create");
-        let res = reqwest::Client::new()
-            .post(&url)
-            .header(AUTHORIZATION, &self.author)
-            .multipart(form)
-            .send()
-            .await?;
+        let res = {
+            let cli = reqwest::Client::new();
+            let req = cli
+                .post(&url)
+                .header(AUTHORIZATION, &self.author)
+                .multipart(form)
+                .build()
+                .unwrap();
+            println!("{:?}", req.headers());
+            cli.execute(req).await?
+        };
         self.limit
             .update_from_header(res.headers(), "asset/create")
             .await;

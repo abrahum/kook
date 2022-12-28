@@ -10,7 +10,7 @@ async fn main() {
             tracing_subscriber::fmt::layer().with_filter(
                 tracing_subscriber::filter::targets::Targets::new()
                     .with_default(LevelFilter::INFO)
-                    .with_targets([(KOOK, LevelFilter::TRACE)]),
+                    .with_targets([(KOOK, LevelFilter::TRACE), ("reqwest", LevelFilter::TRACE)]),
             ),
         )
         .init();
