@@ -45,7 +45,30 @@ impl ToString for KMDItem {
             Self::Mention(s) => format!("(met){s}(met)"),
             Self::Role(s) => format!("(rol){s}(rol)"),
             Self::InlineCode(s) => format!("`{s}`"),
-            Self::Code { ty, content } => format!("```{ty}\n{content}"),
+            Self::Code { ty, content } => format!("```{ty}\n{content}```"),
+            Self::NewLine => "\n".to_owned(),
+        }
+    }
+}
+
+impl KMDItem {
+    pub fn plain_text(&self) -> String {
+        match self {
+            Self::Text(s) => s.to_string(),
+            Self::Blod(v) => v2s(v),
+            Self::Italic(v) => v2s(v),
+            Self::Deleted(v) => v2s(v),
+            Self::Link { text, .. } => format!("[{text}]"),
+            Self::Divider => "---".to_owned(),
+            Self::Ref(v) => v2s(v),
+            Self::Underline(v) => v2s(v),
+            Self::Spoiler(v) => v2s(v),
+            Self::Emoji(s, ..) => s.clone(),
+            Self::Channel(s) => s.clone(),
+            Self::Mention(s) => s.clone(),
+            Self::Role(s) => s.clone(),
+            Self::InlineCode(s) => s.clone(),
+            Self::Code { ty, content } => format!("{ty}\n{content}"),
             Self::NewLine => "\n".to_owned(),
         }
     }
