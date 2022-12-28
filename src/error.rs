@@ -12,4 +12,6 @@ pub enum KookError {
     HttpApiCallError(String),
     #[error("KHL Api get empty response")]
     HttpApiCallEmptyResponse,
+    #[error("reqwest error:{0}")]
+    ReqwestError(#[from] reqwest::Error),
 }
