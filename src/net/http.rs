@@ -110,7 +110,6 @@ impl crate::Kook {
         let res = reqwest::Client::new()
             .post(&url)
             .header(AUTHORIZATION, &self.author)
-            .header(CONTENT_TYPE, "form-data")
             .multipart(form)
             .send()
             .await?;
