@@ -100,6 +100,40 @@ impl crate::Kook {
         self.post::<JsonValue>(url, query).await?;
         Ok(())
     }
+
+    pub async fn create_asset(&self, asset: Vec<u8>) -> KookResult<AssetUrl> {
+        let url: Uri = format!("{}/{}", V3_BASE_URL, "asset/create")
+            .parse()
+            .unwrap();
+        self.limit.check_limit("asset/create").await;
+        debug!(target: KOOK, "Calling api POST {}", "asset/create");
+        let req = Request::post(url)
+            .header(AUTHORIZATION, &self.author)
+            .header(CONTENT_TYPE, "form-data")
+            .body(asset.into())
+            .unwrap();
+        let res = self.http_client.request(req).await?;
+        self.limit
+            .update_from_header(res.headers(), "asset/create")
+            .await;
+        #[cfg(test)]
+        {
+            use hyper::body::to_bytes;
+            let bytes = to_bytes(res.into_body())
+                .await
+                .map_err(|e| KookError::HyperError(e))?;
+            let s = String::from_utf8(bytes.to_vec()).unwrap();
+            tracing::trace!(target: crate::KOOK, "get resp: {:?}", s);
+            let data: HttpResp<EmptyAble<AssetUrl>> = serde_json::from_str(&s)?;
+            data.as_result()
+        }
+        #[cfg(not(test))]
+        {
+            let body = aggregate(res).await?;
+            let data: HttpResp<EmptyAble<AssetUrl>> = serde_json::from_reader(body.reader())?;
+            data.as_result()
+        }
+    }
 }
 
 #[derive(Debug, Default)]

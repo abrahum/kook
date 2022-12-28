@@ -154,3 +154,8 @@ pub struct SelfUser {
     pub mobile: String,
     pub invited_count: String, //bug!
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AssetUrl {
+    pub url: String,
+}
