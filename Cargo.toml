@@ -17,7 +17,7 @@ thiserror = "1"
 futures-util = { version = "0.3", features = ["sink"] }
 async-trait = "0.1"
 dashmap = "5.4"
-reqwest = { version = "*", features = ["multipart"] }
+reqwest = { version = "*", features = ["multipart", "native-tls-vendored"] }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
