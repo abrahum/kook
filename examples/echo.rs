@@ -27,6 +27,7 @@ impl EventHandler for EchoHandler {
     async fn handle_group_message_event(&self, khl: &Kook, event: Event<GroupMessageExtra>) {
         let msg = event.content.clone();
         if msg.starts_with("echo") {
+            let _ = khl.get_me().await.unwrap();
             khl.create_message(None, &event.target_id, "echo", None, None, None)
                 .await
                 .unwrap();

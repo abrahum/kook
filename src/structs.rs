@@ -149,10 +149,10 @@ pub struct SelfUser {
     pub bot: bool,
     pub status: u8,
     pub avatar: String,
-    // pub mobile_verify: bool, bug!
+    pub mobile_verified: bool,
     pub mobile_prefix: String,
     pub mobile: String,
-    pub invited_count: String, //bug!
+    pub invited_count: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
