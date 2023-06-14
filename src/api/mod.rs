@@ -2,6 +2,8 @@ use crate::error::KookResult;
 use crate::net::http::QueryBuilder;
 use crate::{objects::*, structs::*, Kook};
 
+mod builder;
+
 macro_rules! http_api {
     ($fn_name: ident -> $rty: ty, $method: ident, $url: expr) => {
         pub async fn $fn_name(&self) -> KookResult<$rty> {
@@ -24,15 +26,15 @@ const GUILD: &str = "guild";
 
 impl crate::Kook {
     http_api!(get_guild_list -> RespList<GuildShort>,
-        get, vec![GUILD, "list"],
+        get, [GUILD, "list"],
         page: Option<i32>,
         page_size: Option<i32>,
         sort: Option<&str>);
     http_api!(get_guild_view -> Guild,
-        get, vec![GUILD, "view"],
+        get, [GUILD, "view"],
         guild_id: &str);
     http_api!(get_guild_user_list -> GuildUserList,
-        get, vec![GUILD, "user-list"],
+        get, [GUILD, "user-list"],
         guild_id: &str,
         channel_id: Option<&str>,
         search: Option<&str>,
@@ -44,12 +46,12 @@ impl crate::Kook {
         page_size: Option<i32>,
         filter_user_id: Option<&str>);
     http_api!(set_guild_user_nickname -> (),
-        empty_post, vec![GUILD, "nickname"],
+        empty_post,  [GUILD, "nickname"],
         guild_id: &str,
         user_id: Option<&str>,
         nickname: Option<&str>);
-    http_api!(leave_guild -> (), empty_post, vec![GUILD, "leave"], guild: &str);
-    http_api!(kickout_guild_user -> (), empty_post, vec![GUILD, "kickout"], guild: &str, target_id: &str);
+    http_api!(leave_guild -> (), empty_post,  [GUILD, "leave"], guild: &str);
+    http_api!(kickout_guild_user -> (), empty_post,  [GUILD, "kickout"], guild: &str, target_id: &str);
 }
 
 const GUILD_MUTE: &str = "guild_mute";
@@ -59,21 +61,21 @@ impl Kook {
         let mut query = QueryBuilder::default();
         query.push("guild_id", guild_id);
         query.push("return_type", "detail");
-        self.get(vec![GUILD_MUTE, "list"], query).await
+        self.get([GUILD_MUTE, "list"], query).await
     }
     pub async fn create_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KookResult<()> {
         let mut query = QueryBuilder::default();
         query.push("guild_id", guild_id);
         query.push("user_id", user_id);
         query.push("type", ty);
-        self.empty_post(vec![GUILD_MUTE, "create"], query).await
+        self.empty_post([GUILD_MUTE, "create"], query).await
     }
     pub async fn delete_guild_mute(&self, guild_id: &str, user_id: &str, ty: u8) -> KookResult<()> {
         let mut query = QueryBuilder::default();
         query.push("guild_id", guild_id);
         query.push("user_id", user_id);
         query.push("type", ty);
-        self.empty_post(vec![GUILD_MUTE, "delete"], query).await
+        self.empty_post([GUILD_MUTE, "delete"], query).await
     }
 }
 
@@ -92,10 +94,10 @@ impl Kook {
         query.push("page_size", page_size);
         query.push("guild_id", guild_id);
         query.push("type", ty);
-        self.get(vec![CHANNEL, "list"], query).await
+        self.get([CHANNEL, "list"], query).await
     }
     http_api!(get_channel_view -> ChannelView,
-        get, vec![CHANNEL, "view"],
+        get, [CHANNEL, "view"],
         target_id: &str);
     pub async fn create_channel(
         &self,
@@ -115,22 +117,22 @@ impl Kook {
         query.push("limit_amount", limit_amount);
         query.push("voice_quality", voice_quality);
         query.push("is_category", is_category);
-        self.post(vec![CHANNEL, "create"], query).await
+        self.post([CHANNEL, "create"], query).await
     }
     http_api!(update_channel -> Channel,
-        post, vec![CHANNEL, "update"],
+        post,  [CHANNEL, "update"],
         channel_id: &str,
         name: Option<&str>,
         topic: Option<&str>,
         slow_mode: Option<i64>);
     http_api!(delete_channel -> (),
-        empty_post, vec![CHANNEL, "delete"],
+        empty_post,  [CHANNEL, "delete"],
         channel_id: &str);
     http_api!(get_channel_user_list -> Vec<User>,
-        get, vec![CHANNEL, "user-list"],
+        get, [CHANNEL, "user-list"],
         channel_id: &str);
     http_api!(move_channel_user -> (),
-        empty_post, vec![CHANNEL, "move-user"],
+        empty_post,  [CHANNEL, "move-user"],
         target_id: &str, user_id: &str);
 }
 
@@ -138,7 +140,7 @@ const CHANNEL_ROLE: &str = "channel-role";
 
 impl Kook {
     http_api!(get_channel_role -> ChannelRole,
-        get, vec![CHANNEL_ROLE, "index"],
+        get, [CHANNEL_ROLE, "index"],
         channel_id: &str);
     // pub async fn create_channel_role ->
 }
@@ -162,16 +164,16 @@ impl Kook {
         query.push("quote", quote);
         query.push("nonce", nonce);
         query.push("temp_target_id", temp_target_id);
-        self.post(vec![MESSAGE, "create"], query).await
+        self.post([MESSAGE, "create"], query).await
     }
     http_api!(update_messaeg -> (),
-        empty_post, vec![MESSAGE, "update"],
+        empty_post,  [MESSAGE, "update"],
         msg_id: &str,
         content: &str,
         quote: Option<&str>,
         temp_target_id: Option<&str>);
     http_api!(delete_message -> (),
-        empty_post, vec![MESSAGE, "delete"],
+        empty_post,  [MESSAGE, "delete"],
         msg_id: &str);
 }
 
@@ -179,7 +181,7 @@ const DIRECT_MESSAGE: &str = "direct-message";
 
 impl crate::Kook {
     http_api!(get_direct_message_list -> RespList<DirectMessage>,
-        get, vec![DIRECT_MESSAGE, "list"],
+        get, [DIRECT_MESSAGE, "list"],
         chat_code: Option<&str>,
         target_id: Option<&str>,
         msg_id: Option<&str>,
@@ -202,15 +204,15 @@ impl crate::Kook {
         query.push("type", ty);
         query.push("quote", quote);
         query.push("nonce", nonce);
-        self.post(vec![DIRECT_MESSAGE, "create"], query).await
+        self.post([DIRECT_MESSAGE, "create"], query).await
     }
     http_api!(update_direct_message-> (),
-        empty_post, vec![DIRECT_MESSAGE, "update"],
+        empty_post,  [DIRECT_MESSAGE, "update"],
         msg_id: Option<&str>,
         content: &str,
         quote: Option<&str>);
     http_api!(delete_direct_message -> (),
-        empty_post, vec![DIRECT_MESSAGE, "delete"],
+        empty_post,  [DIRECT_MESSAGE, "delete"],
         msg_id: Option<&str>);
     // http_api!(get_direct_message_reaction_list) todo
     // http_api!(add_direct_message_reaction) todo
@@ -220,14 +222,14 @@ impl crate::Kook {
 const USER: &str = "user";
 
 impl crate::Kook {
-    http_api!(get_me -> SelfUser, get, vec![USER, "me"]);
+    http_api!(get_me -> SelfUser, get, [USER, "me"]);
 }
 
 const GATEWAY: &str = "gateway";
 
 impl crate::Kook {
     http_api!(get_gateway -> Gateway,
-    get, vec![GATEWAY, "index"],
+    get, [GATEWAY, "index"],
     compress: bool);
 }
 

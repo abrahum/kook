@@ -22,7 +22,7 @@ impl crate::Kook {
         Client::builder().build::<_, Body>(https)
     }
 
-    pub async fn get<T>(&self, url: Vec<&str>, query: QueryBuilder) -> KookResult<T>
+    pub async fn get<T>(&self, url: [&str; 2], query: QueryBuilder) -> KookResult<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
@@ -61,7 +61,7 @@ impl crate::Kook {
         }
     }
 
-    pub async fn post<T>(&self, url: Vec<&str>, query: QueryBuilder) -> KookResult<T>
+    pub async fn post<T>(&self, url: [&str; 2], query: QueryBuilder) -> KookResult<T>
     where
         for<'de> T: serde::Deserialize<'de>,
     {
@@ -96,7 +96,7 @@ impl crate::Kook {
         }
     }
 
-    pub async fn empty_post(&self, url: Vec<&str>, query: QueryBuilder) -> KookResult<()> {
+    pub async fn empty_post(&self, url: [&str; 2], query: QueryBuilder) -> KookResult<()> {
         self.post::<JsonValue>(url, query).await?;
         Ok(())
     }
