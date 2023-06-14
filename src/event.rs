@@ -70,7 +70,7 @@ pub enum SystemExtra {
         user_id: String,
         msg_id: String,
     },
-    UpdateMessage {
+    UpdatedMessage {
         channel_id: String,
         content: String,
         mention: Vec<String>,
